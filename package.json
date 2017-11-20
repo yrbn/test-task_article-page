@@ -1,0 +1,34 @@
+{
+  "name": "article",
+  "version": "1.0.0",
+  "description": "",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yrbn/baseproject.git"
+  },
+  "author": "Yuriy Rybin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yrbn/baseproject/issues"
+  },
+  "homepage": "https://github.com/yrbn/baseproject#readme",
+  "devDependencies": {
+    "autoprefixer": "^6.7.7",
+    "browser-sync": "^2.18.13",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-consolidate": "^0.2.0",
+    "gulp-iconfont": "^8.0.1",
+    "gulp-imagemin": "^3.4.0",
+    "gulp-postcss": "^6.4.0",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "lodash": "^4.13.1",
+    "require-dir": "^0.3.0"
+  },
+  "dependencies": {}
+}
