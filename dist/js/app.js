@@ -3,61 +3,51 @@ $(function() {
       commentsToLoad = 5;
       userId = 1;
 
-  getComments(offsetCount, commentsToLoad, false);
+  getComments(false, true);
 
   $('body').on('click', '.js-edit-comment', function(e) {
-    var $textarea = $(this).parent().siblings('.js-edit-comment-area').find('.js-comment-textarea'),
-        commentText = $(this).parent().siblings('.js-comment-content').text();
+    var $parentBlock = $(this).parent();
+    var commentContent = $parentBlock.siblings('.js-comment-content').text();
+    var commentAuthor = $(this).closest('.comment').data('author-name');
+    var newTextArea = '<div class="comment_typing comment_typing--dynamic js-edit-comment-area clearfix">' +
+                        '<span class="comment_reply-to">Editing...</span>' + 
+                        '<span class="comment_cancel js-cancel-comment"><i class="fa fa-times" aria-hidden="true"></i> Cancel</span>' + 
+                        '<textarea class="comment_textarea js-comment-textarea" placeholder="Your Message"></textarea>' +
+                        '<input type="button" value="Send" class="comment_submit js-submit-comment" data-edit=1>' + 
+                      '</div>';
 
-    $('.js-edit-comment-area').attr('data-edit', 0).hide();
-    $('.js-comment-textarea').val('');
-
-    $(this).parent().siblings('.js-edit-comment-area').attr('data-edit', 1).show();
-    $textarea.val(commentText);
+    $('.js-edit-comment-area').remove();
+    $(newTextArea).insertAfter($parentBlock);
+    $(this).parent().siblings('.js-edit-comment-area').find('.js-comment-textarea').val(commentContent).focus();
   });
 
   $('body').on('click', '.js-reply-comment', function(e) {
-    $('.js-edit-comment-area').attr('data-reply', 0).hide();
-    $('.js-comment-textarea').val('');
+    var $parentBlock = $(this).parent();
+    var newTextArea = '<div class="comment_typing comment_typing--dynamic js-edit-comment-area clearfix">' +
+                        '<span class="comment_reply-to">Editing...</span>' + 
+                        '<span class="comment_cancel js-cancel-comment"><i class="fa fa-times" aria-hidden="true"></i> Cancel</span>' + 
+                        '<textarea class="comment_textarea js-comment-textarea" placeholder="Your Message"></textarea>' +
+                        '<input type="button" value="Send" class="comment_submit js-submit-comment" data-reply=1>' + 
+                      '</div>';
 
-    $(this).parent().siblings('.js-edit-comment-area').attr('data-reply', 1).show();
+    $('.js-edit-comment-area').remove();
+    $(newTextArea).insertAfter($parentBlock);
+    $(this).parent().siblings('.js-edit-comment-area').find('.js-comment-textarea').focus();
   });
 
   $('body').on('click', '.js-delete-comment', function(e) {
+    var $parentBlock = $(this).closest('.comment');
     var actionData = {
           _method: 'DELETE'
         };
+    var commentId = $(this).closest('.comment').data('comment-id');
+    var isChild = $(this).closest('.comment').parents('.comment').length ? true : false;
 
-    var commentId = $(this).closest('.comment-child').length ? $(this).closest('.comment-child').data('comment-id')
-                                                            : $(this).closest('.comment').data('comment-id');
-
-    $.ajax({
-      url: 'http://frontend-test.pingbull.com/pages/yurii.rbn@gmail.com/comments/' + commentId,
-      type: 'POST',
-      dateType: 'json',
-      data: actionData,
-      beforeSend: function() {
-        var preloader = '<div class="preload-block">' +
-                          '<div class="preloader"></div>' + 
-                        '</div>';
-
-        $('.js-comments-list').append(preloader);
-      },
-      complete: function() {
-        $('.js-comments-list').find('.preload-block').remove();
-      },
-      success: function(data, textStatus, jqXHR) {
-        offsetCount = 0;
-        getComments(offsetCount, commentsToLoad, true);
-      },
-      error: function(jqXHR, textStatus, errorThrown) {
-        alert(textStatus);
-      }
-    });
+    deleteComment(actionData, commentId, $parentBlock, isChild);
   });
 
   $('body').on('click', '.js-cancel-comment', function(e) {
-    $(this).closest('.js-edit-comment-area').attr('data-edit', 0).hide();
+    $('.js-edit-comment-area').remove();
   });
 
   $('body').on('click', '.js-submit-comment', function(e) {
@@ -68,33 +58,35 @@ $(function() {
         },
         commentId = null;
 
-    if($textarea.parent().data('edit') == 1) {
+    if($(this).data('edit') == 1) {
       actionData._method = 'PUT';
-      commentId =$(this).closest('.comment-child').length ? $(this).closest('.comment-child').data('comment-id')
-                                                        : $(this).closest('.comment').data('comment-id');
-    }
-    
-    if($textarea.parent().data('reply') == 1) {
-      actionData.parent = $textarea.closest('.comment').data('comment-id');
-    } else {
-      actionData.parent = null;
+      commentId = $(this).closest('.comment').data('comment-id');
     }
 
-    postComment(actionData, $textarea, commentId, commentsToLoad);
+    actionData.parent = $(this).data('reply') == 1 ? $textarea.closest('.comment').data('comment-id') : null;
+
+    postComment(actionData, commentId, $textarea);
   });
 
   $('.js-more-comments').on('click', function(e) {
-    getComments(offsetCount, commentsToLoad, false);
+    getComments(false, true);
   })
 
-  function getComments(offset, commentsQty, refresh) {
+  function getComments(toRefreshComments, toIncrOffsetCount, commentsToLoadQty, newOffsetCount) {
+    var args = Array.prototype.slice.call(arguments);
+
+    if(args.length <=2) {
+      commentsToLoadQty = commentsToLoad;
+      newOffsetCount = offsetCount;
+    }
+
     $.ajax({
       url: 'http://frontend-test.pingbull.com/pages/yurii.rbn@gmail.com/comments',
       type: 'GET',
       dateType: 'json',
       data: {
-          count: commentsQty,
-          offset: offset
+          count: commentsToLoadQty,
+          offset: newOffsetCount
       },
       beforeSend: function() {
         var preloader = '<div class="preload-block">' +
@@ -111,7 +103,7 @@ $(function() {
           var newCommentsList = '';
           
           $.each(data, function(index, comment) {
-            newCommentsList += '<div class="comment" data-author-id="' + comment.author.id + '" data-comment-id="' + comment.id + '">' + 
+            newCommentsList += '<div class="comment" data-author-name="' + comment.author.name + '" data-author-id="' + comment.author.id + '" data-comment-id="' + comment.id + '">' + 
                                   '<div class="comment_avatar">' +
                                     '<img src="' + comment.author.avatar + '" alt="User Image">' + 
                                   '</div>' + 
@@ -129,38 +121,26 @@ $(function() {
             }
             
             newCommentsList += '<span class="comment_action js-reply-comment"><i class="fa fa-reply" aria-hidden="true"></i> Reply</span>' + 
-                              '</div>' +
-                              '<div class="comment_typing comment_typing--hidden js-edit-comment-area clearfix">' +
-                                '<span class="comment_reply-to"><i class="fa fa-share" aria-hidden="true"></i> ' + comment.author.name + '</span>' + 
-                                '<span class="comment_cancel js-cancel-comment"><i class="fa fa-times" aria-hidden="true"></i> Cancel</span>' + 
-                                '<textarea class="comment_textarea js-comment-textarea" placeholder="Your Message"></textarea>' +
-                                '<input type="button" value="Send" class="comment_submit js-submit-comment">' + 
                               '</div>';
   
             if(comment.children.length) {
               $.each(comment.children, function(index, child) {
-                newCommentsList += '<div class="comment-child" data-author-id="' + child.author.id + '" data-comment-id="' + child.id + '">' + 
-                                    '<div class="comment-child_avatar">' +
+                newCommentsList += '<div class="comment" data-author-id="' + child.author.id + '" data-comment-id="' + child.id + '">' + 
+                                    '<div class="comment_avatar">' +
                                       '<img src="' + child.author.avatar + '" alt="User Image">' + 
                                     '</div>' + 
-                                    '<div class="comment-child_content">' + 
-                                      '<div class="comment-child_info">' +
-                                        '<span class="comment-child_author">' + child.author.name + '</span>' +
-                                        '<span class="comment-child_parent"><i class="fa fa-share" aria-hidden="true"></i> ' + comment.author.name + '</span>' +
-                                        '<span class="comment-child_date"><i class="fa fa-clock-o" aria-hidden="true"></i><span class="medium-text"> ' + getDate(comment.updated_at) + '</span> at <span class="medium-text">' + getTime(comment.updated_at) + '</span></span>' +
+                                    '<div class="comment_content">' + 
+                                      '<div class="comment_info">' +
+                                        '<span class="comment_author">' + child.author.name + '</span>' +
+                                        '<span class="comment_parent"><i class="fa fa-share" aria-hidden="true"></i> ' + comment.author.name + '</span>' +
+                                        '<span class="comment_date"><i class="fa fa-clock-o" aria-hidden="true"></i><span class="medium-text"> ' + getDate(comment.updated_at) + '</span> at <span class="medium-text">' + getTime(comment.updated_at) + '</span></span>' +
                                       '</div>' + 
-                                      '<div class="comment-child_text js-comment-content">' + child.content + '</div>';
+                                      '<div class="comment_text js-comment-content">' + child.content + '</div>';
 
                 if(child.author.id === userId) {
-                  newCommentsList += '<div class="comment-child_actions">' + 
-                                      '<span class="comment-child_action js-edit-comment"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</span>' + 
-                                      '<span class="comment-child_action js-delete-comment"><i class="fa fa-times" aria-hidden="true"></i> Delete</span>' + 
-                                     '</div>' + 
-                                     '<div class="comment-child_typing comment_typing--hidden js-edit-comment-area clearfix">' +
-                                      '<span class="comment-child_reply-to"><i class="fa fa-reply" aria-hidden="true"></i> ' + comment.author.name + '</span>' + 
-                                      '<span class="comment-child_cancel js-cancel-comment"><i class="fa fa-times" aria-hidden="true"></i> Cancel</span>' + 
-                                      '<textarea class="comment-child_textarea js-comment-textarea" placeholder="Your Message"></textarea>' +
-                                      '<input type="button" value="Send" class="comment-child_submit js-submit-comment">' + 
+                  newCommentsList += '<div class="comment_actions">' + 
+                                      '<span class="comment_action js-edit-comment"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</span>' + 
+                                      '<span class="comment_action js-delete-comment"><i class="fa fa-times" aria-hidden="true"></i> Delete</span>' + 
                                      '</div>';
                 }
 
@@ -176,15 +156,15 @@ $(function() {
           });
         }
         
-        if(data.length < 5) {
-          $('.js-comments-more-block').remove();
-        }        
-
-        if(refresh) {
+        if(toRefreshComments) {
           $('.js-comments-list').empty();
+          $('.js-comments-more-block').show();
         }
         
-        offsetCount += 5;
+        if(data.length < 5) $('.js-comments-more-block').hide();
+
+        if(toIncrOffsetCount) offsetCount += 5;
+
         $('.js-comments-list').append(newCommentsList);
       },
       error: function(jqXHR, textStatus, errorThrown) {
@@ -193,16 +173,16 @@ $(function() {
     });
   };
 
-  function postComment(actionData, $textarea, commentId, commentsToLoad) {
+  function postComment(data, id, $textarea) {
     var url = 'http://frontend-test.pingbull.com/pages/yurii.rbn@gmail.com/comments'
 
-    if(commentId) url += '/' + commentId;
+    if(id) url += '/' + id;
 
     $.ajax({
       url: url,
       type: 'POST',
       dateType: 'json',
-      data: actionData,
+      data: data,
       beforeSend: function() {
         var preloader = '<div class="preload-block">' +
                           '<div class="preloader"></div>' + 
@@ -214,16 +194,41 @@ $(function() {
         $('.js-comments-list').find('.preload-block').remove();
       },
       success: function(data, textStatus, jqXHR) {
-        offsetCount = 0;
-        $textarea.val('');
-        $textarea.parent().attr('data-edit', 0);
-        getComments(offsetCount, commentsToLoad, true);
+        var newOffsetCount = 0;
+        $('.js-edit-comment-area').remove();
+        getComments(true, false, offsetCount, newOffsetCount);
       },
       error: function(jqXHR, textStatus, errorThrown) {
         alert(textStatus);
       }
     });
   };
+
+  function deleteComment(data, id, commentBlock, isChild) {
+    $.ajax({
+      url: 'http://frontend-test.pingbull.com/pages/yurii.rbn@gmail.com/comments/' + id,
+      type: 'POST',
+      dateType: 'json',
+      data: data,
+      beforeSend: function() {
+        var preloader = '<div class="preload-block">' +
+                          '<div class="preloader"></div>' + 
+                        '</div>';
+
+        $('.js-comments-list').append(preloader);
+      },
+      complete: function() {
+        $('.js-comments-list').find('.preload-block').remove();
+      },
+      success: function(data, textStatus, jqXHR) {
+        $(commentBlock).remove();
+        if(!isChild) offsetCount -= 1;
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        alert(textStatus);
+      }
+    });
+  }
 
   function getDate(date) {
     date = new Date(date);
