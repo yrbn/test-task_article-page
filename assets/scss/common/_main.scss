@@ -295,7 +295,7 @@ body {
 
   &_content {
     margin-left: 7px;
-    width: 100%;
+    flex-grow: 1;
 
     @include tablet() {
       margin-left: 22px;
@@ -428,7 +428,7 @@ body {
     }
 
     &:-ms-input-placeholder {
-      color:#c0392b;
+      color:#e2e2e2;
     }
 
     &:focus {
@@ -537,6 +537,57 @@ body {
     &:hover {
       background-color: #ffd800;
       color: $font-color-primary;
+    }
+  }
+}
+
+.modal-window {
+  display: none;
+  position: fixed;
+  top:0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+
+  &_content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    max-width: 940px;
+    transform: translate(-50%, -50%);
+    background-color: $white;
+  }
+
+  &_body {
+    padding: 20px; 
+  }
+
+  &_footer {
+    padding: 5px 10px;
+    border-top: 1px solid $color-primary;
+    text-align: right;
+  }
+
+  &_btn {
+    padding: 5px 10px;
+    background-color: $white;
+    border: 2px solid $color-primary;
+    font-family: $font-primary;
+    font-size: 14px;
+    color: #b6b6b6;
+    outline: none;
+    transition: .5s;
+    cursor: pointer;
+
+    &:hover {
+      background-color: $color-primary;
+      //color: $white;
+    }
+
+    @include tablet() {
+      padding: 8px 12px;
+      font-size: 17px;
     }
   }
 }

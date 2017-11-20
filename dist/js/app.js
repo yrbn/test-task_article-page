@@ -24,7 +24,7 @@ $(function() {
   $('body').on('click', '.js-reply-comment', function(e) {
     var $parentBlock = $(this).parent();
     var newTextArea = '<div class="comment_typing comment_typing--dynamic js-edit-comment-area clearfix">' +
-                        '<span class="comment_reply-to">Editing...</span>' + 
+                        '<span class="comment_reply-to"><i class="fa fa-share" aria-hidden="true"></i> ' + $parentBlock.closest('.comment').data('author-name') + '</span>' + 
                         '<span class="comment_cancel js-cancel-comment"><i class="fa fa-times" aria-hidden="true"></i> Cancel</span>' + 
                         '<textarea class="comment_textarea js-comment-textarea" placeholder="Your Message"></textarea>' +
                         '<input type="button" value="Send" class="comment_submit js-submit-comment" data-reply=1>' + 
@@ -65,11 +65,20 @@ $(function() {
 
     actionData.parent = $(this).data('reply') == 1 ? $textarea.closest('.comment').data('comment-id') : null;
 
-    postComment(actionData, commentId, $textarea);
+    if($textarea.val().length) {
+      postComment(actionData, commentId, $textarea);
+    } else {
+      $('#alert-modal').find('.js-modal-content').text('Comment can not be empty!')
+                      .end().fadeIn();
+    }
   });
 
   $('.js-more-comments').on('click', function(e) {
     getComments(false, true);
+  });
+
+  $('.js-close-modal').on('click', function(e) {
+    $(this).closest('.modal-window').fadeOut();
   })
 
   function getComments(toRefreshComments, toIncrOffsetCount, commentsToLoadQty, newOffsetCount) {
@@ -168,7 +177,8 @@ $(function() {
         $('.js-comments-list').append(newCommentsList);
       },
       error: function(jqXHR, textStatus, errorThrown) {
-        alert(textStatus);
+        $('#alert-modal').find('.js-modal-content').text(textStatus)
+                        .end().fadeIn();
       }
     });
   };
@@ -195,11 +205,13 @@ $(function() {
       },
       success: function(data, textStatus, jqXHR) {
         var newOffsetCount = 0;
+        $textarea.val('');
         $('.js-edit-comment-area').remove();
         getComments(true, false, offsetCount, newOffsetCount);
       },
       error: function(jqXHR, textStatus, errorThrown) {
-        alert(textStatus);
+        $('#alert-modal').find('.js-modal-content').text(textStatus)
+                        .end().fadeIn();
       }
     });
   };
@@ -225,7 +237,8 @@ $(function() {
         if(!isChild) offsetCount -= 1;
       },
       error: function(jqXHR, textStatus, errorThrown) {
-        alert(textStatus);
+        $('#alert-modal').find('.js-modal-content').text(textStatus)
+                      .end().fadeIn();
       }
     });
   }

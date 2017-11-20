@@ -276,7 +276,8 @@ body {
           width: 80px; } }
   .comment_content {
     margin-left: 7px;
-    width: 100%; }
+    -ms-flex-positive: 1;
+        flex-grow: 1; }
     @media (min-width: 720px) {
       .comment_content {
         margin-left: 22px; } }
@@ -363,7 +364,7 @@ body {
     .comment_textarea::-webkit-input-placeholder {
       color: #e2e2e2; }
     .comment_textarea:-ms-input-placeholder {
-      color: #c0392b; }
+      color: #e2e2e2; }
     .comment_textarea:focus {
       border-color: #bfbfbf; }
     @media (min-width: 720px) {
@@ -445,6 +446,44 @@ body {
     .comments-more_btn:hover {
       background-color: #ffd800;
       color: #454545; }
+
+.modal-window {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5); }
+  .modal-window_content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    max-width: 940px;
+    transform: translate(-50%, -50%);
+    background-color: #ffffff; }
+  .modal-window_body {
+    padding: 20px; }
+  .modal-window_footer {
+    padding: 5px 10px;
+    border-top: 1px solid #f2f2f2;
+    text-align: right; }
+  .modal-window_btn {
+    padding: 5px 10px;
+    background-color: #ffffff;
+    border: 2px solid #f2f2f2;
+    font-family: "Stag Book", serif;
+    font-size: 14px;
+    color: #b6b6b6;
+    outline: none;
+    transition: .5s;
+    cursor: pointer; }
+    .modal-window_btn:hover {
+      background-color: #f2f2f2; }
+    @media (min-width: 720px) {
+      .modal-window_btn {
+        padding: 8px 12px;
+        font-size: 17px; } }
 
 .medium-text {
   font-family: "Stag Medium", serif; }
